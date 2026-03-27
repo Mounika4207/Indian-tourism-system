@@ -1,0 +1,189 @@
+<!-- =====================================================
+  AUTH MODAL — Copy this into every HTML page (before </body>)
+  Also add these nav elements inside your .navbar div:
+  ===================================================== -->
+
+<!-- ADD TO NAVBAR (inside .nav-right div): -->
+<!--
+<button class="auth-nav-btn" id="authBtn" onclick="openAuthModal()">👤 Login / Sign Up</button>
+<div class="user-menu hidden" id="userMenu">
+  <span id="userName"></span>
+  <button class="auth-nav-btn logout" onclick="logout()">Logout</button>
+</div>
+-->
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="authModal" onclick="if(event.target===this)closeAuthModal()">
+  <div class="modal-content auth-modal-content">
+    <button class="close" onclick="closeAuthModal()">✕</button>
+
+    <!-- TABS -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Login</button>
+      <button class="auth-tab" id="tabSignup" onclick="switchAuthTab('signup')">Sign Up</button>
+    </div>
+
+    <!-- LOGIN PANEL -->
+    <div id="loginPanel">
+      <h2 class="auth-title">Welcome Back 👋</h2>
+      <p class="auth-sub">Sign in to access your favourites & trip plans</p>
+      <div class="auth-form">
+        <input type="email" id="loginEmail" placeholder="Email address">
+        <input type="password" id="loginPassword" placeholder="Password">
+        <button class="auth-submit-btn" onclick="handleLogin()">Login</button>
+      </div>
+      <div class="auth-divider"><span>or</span></div>
+      <button class="google-btn" onclick="loginWithGoogle()">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" alt="G">
+        Continue with Google
+      </button>
+    </div>
+
+    <!-- SIGNUP PANEL -->
+    <div id="signupPanel" style="display:none;">
+      <h2 class="auth-title">Create Account 🌟</h2>
+      <p class="auth-sub">Join us to plan your dream India trip</p>
+      <div class="auth-form">
+        <input type="text" id="signupName" placeholder="Your full name">
+        <input type="email" id="signupEmail" placeholder="Email address">
+        <input type="password" id="signupPassword" placeholder="Password (min 6 chars)">
+        <button class="auth-submit-btn" onclick="handleSignup()">Create Account</button>
+      </div>
+      <div class="auth-divider"><span>or</span></div>
+      <button class="google-btn" onclick="loginWithGoogle()">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" alt="G">
+        Continue with Google
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SAFETY ALERT BANNER (shown at top of page if alerts exist) -->
+<div id="safetyBanner" style="display:none;" class="safety-banner">
+  <span id="safetyIcon">⚠️</span>
+  <span id="safetyMsg"></span>
+  <button onclick="document.getElementById('safetyBanner').style.display='none'">✕</button>
+</div>
+
+<!-- AUTH STYLES — Add to styles.css or paste here -->
+<style>
+.auth-nav-btn {
+  padding: 8px 18px; border: 1.5px solid var(--orange);
+  color: var(--orange); background: transparent;
+  border-radius: 20px; cursor: pointer; font-size: 14px;
+  font-family: inherit; transition: all 0.2s;
+}
+.auth-nav-btn:hover, .auth-nav-btn.logout { background: var(--orange); color: white; }
+.user-menu { display: flex; align-items: center; gap: 10px; }
+.user-menu span { color: var(--text); font-size: 14px; font-weight: 600; }
+.hidden { display: none !important; }
+
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.auth-modal-content {
+  background: var(--card-bg, #fff); border-radius: 20px;
+  padding: 36px 32px; width: 100%; max-width: 420px;
+  position: relative; animation: fadeUp 0.3s ease;
+}
+
+.auth-tabs { display: flex; gap: 0; margin-bottom: 24px; border-radius: 10px; overflow: hidden; border: 1.5px solid var(--border, #e5e7eb); }
+.auth-tab { flex: 1; padding: 10px; border: none; background: transparent; cursor: pointer; font-size: 15px; font-weight: 500; color: #888; transition: all 0.2s; }
+.auth-tab.active { background: var(--orange, #ff7a00); color: white; }
+
+.auth-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 6px; color: var(--text, #1a1a2e); }
+.auth-sub { color: #888; font-size: 14px; margin-bottom: 20px; }
+
+.auth-form { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+.auth-form input {
+  padding: 12px 16px; border-radius: 10px;
+  border: 1.5px solid var(--border, #e5e7eb);
+  font-size: 15px; font-family: inherit;
+  background: var(--bg, #f3f4f6); color: var(--text, #1a1a2e);
+  transition: border 0.2s;
+}
+.auth-form input:focus { outline: none; border-color: var(--orange, #ff7a00); }
+.auth-submit-btn {
+  padding: 13px; background: var(--orange, #ff7a00); color: white;
+  border: none; border-radius: 10px; font-size: 16px;
+  font-weight: 600; cursor: pointer; font-family: inherit;
+}
+.auth-submit-btn:hover { opacity: 0.9; }
+
+.auth-divider { text-align: center; color: #aaa; font-size: 13px; margin: 14px 0; position: relative; }
+.auth-divider::before, .auth-divider::after { content: ''; position: absolute; top: 50%; width: 42%; height: 1px; background: #e5e7eb; }
+.auth-divider::before { left: 0; } .auth-divider::after { right: 0; }
+
+.google-btn {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  width: 100%; padding: 12px; border: 1.5px solid #ddd; border-radius: 10px;
+  background: white; cursor: pointer; font-size: 15px; font-family: inherit;
+  transition: box-shadow 0.2s;
+}
+.google-btn:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.12); }
+
+/* Safety Banner */
+.safety-banner {
+  position: fixed; top: 70px; left: 0; right: 0; z-index: 99;
+  display: flex; align-items: center; justify-content: center;
+  gap: 12px; padding: 12px 24px; font-size: 14px; font-weight: 500;
+}
+.safety-banner.warning { background: #fff3cd; color: #856404; border-bottom: 2px solid #ffc107; }
+.safety-banner.danger  { background: #f8d7da; color: #721c24; border-bottom: 2px solid #f5c6cb; }
+.safety-banner.info    { background: #d1ecf1; color: #0c5460; border-bottom: 2px solid #bee5eb; }
+.safety-banner button  { background: none; border: none; font-size: 18px; cursor: pointer; color: inherit; margin-left: 12px; }
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+</style>
+
+<script type="module">
+import {
+  loginWithGoogle, loginWithEmail, signUpWithEmail, logout,
+  openAuthModal, closeAuthModal,
+  getSafetyAlerts
+} from "./firebase-auth.js";
+
+// Make functions global so onclick= works
+window.loginWithGoogle  = loginWithGoogle;
+window.logout           = logout;
+window.openAuthModal    = openAuthModal;
+window.closeAuthModal   = closeAuthModal;
+
+window.switchAuthTab = (tab) => {
+  document.getElementById("loginPanel").style.display  = tab==="login"  ? "block" : "none";
+  document.getElementById("signupPanel").style.display = tab==="signup" ? "block" : "none";
+  document.getElementById("tabLogin").classList.toggle("active",  tab==="login");
+  document.getElementById("tabSignup").classList.toggle("active", tab==="signup");
+};
+
+window.handleLogin = () => {
+  const email    = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  if (!email || !password) { alert("Please fill all fields."); return; }
+  loginWithEmail(email, password);
+};
+
+window.handleSignup = () => {
+  const name     = document.getElementById("signupName").value.trim();
+  const email    = document.getElementById("signupEmail").value.trim();
+  const password = document.getElementById("signupPassword").value;
+  if (!name || !email || !password) { alert("Please fill all fields."); return; }
+  signUpWithEmail(name, email, password);
+};
+
+// ── Show safety alerts for a place ──────────────────────────
+window.showSafetyAlerts = async (placeId) => {
+  const alerts = await getSafetyAlerts(placeId);
+  if (!alerts.length) return;
+  const banner = document.getElementById("safetyBanner");
+  const top = alerts[0]; // show most recent
+  document.getElementById("safetyMsg").textContent = top.message || "Travel advisory active for this area.";
+  document.getElementById("safetyIcon").textContent = top.level==="danger" ? "🚨" : top.level==="warning" ? "⚠️" : "ℹ️";
+  banner.className = "safety-banner " + (top.level || "warning");
+  banner.style.display = "flex";
+};
+</script>

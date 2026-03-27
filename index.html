@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Incredible India - Home</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="logo">📍 Incredible <span class="highlight">India</span></div>
+  <div class="hamburger" onclick="toggleMenu()">☰</div>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="index.html" class="active">Home</a></li>
+    <li><a href="explore.html">Explore</a></li>
+    <li><a href="favourites.html">Favourites</a></li>
+    <li><a href="trip-planner.html">Trip Planner</a></li>
+    <li><a href="contact details.html">Contact</a></li>
+  </ul>
+  <div class="nav-right">
+    <input type="text" placeholder="Search places..." class="search" id="homeSearch">
+    <select class="dropdown" id="homeState">
+      <option value="">All States</option>
+      <option>Uttar Pradesh</option>
+      <option>Rajasthan</option>
+      <option>Goa</option>
+      <option>Tamil Nadu</option>
+      <option>Karnataka</option>
+      <option>Kerala</option>
+      <option>Himachal Pradesh</option>
+      <option>West Bengal</option>
+      <option>Punjab</option>
+    </select>
+    <select class="dropdown" id="homeCat">
+      <option value="">All Categories</option>
+      <option>Heritage</option>
+      <option>Nature</option>
+      <option>Beach</option>
+      <option>Spiritual</option>
+      <option>Hill Station</option>
+    </select>
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+  </div>
+</nav>
+
+<!-- HERO SECTION -->
+<section class="hero">
+  <div class="hero-content">
+    <h1>Discover the Beauty of India</h1>
+    <p>
+      From majestic forts to serene backwaters, explore the incredible diversity
+      of culture, heritage, and natural wonders across the subcontinent.
+    </p>
+    <button class="explore-btn" onclick="goExplore()">Start Exploring →</button>
+  </div>
+</section>
+
+<!-- STATS SECTION -->
+<section class="stats-section">
+  <div class="stats-grid">
+    <div class="stat-box">
+      <div class="stat-num">20+</div>
+      <div class="stat-label">Destinations</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">28</div>
+      <div class="stat-label">States Covered</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">5</div>
+      <div class="stat-label">Categories</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">∞</div>
+      <div class="stat-label">Memories to Make</div>
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES SECTION -->
+<section class="categories-section">
+  <div class="section-container">
+    <h2 class="section-heading">Explore by <span>Category</span></h2>
+    <p class="section-sub">Find your perfect type of destination</p>
+    <div class="cat-grid">
+      <div class="cat-card" onclick="goToCategory('Heritage')">
+        <div class="cat-icon">🏛️</div>
+        <div class="cat-name">Heritage</div>
+      </div>
+      <div class="cat-card" onclick="goToCategory('Nature')">
+        <div class="cat-icon">🌿</div>
+        <div class="cat-name">Nature</div>
+      </div>
+      <div class="cat-card" onclick="goToCategory('Beach')">
+        <div class="cat-icon">🏖️</div>
+        <div class="cat-name">Beaches</div>
+      </div>
+      <div class="cat-card" onclick="goToCategory('Spiritual')">
+        <div class="cat-icon">🕌</div>
+        <div class="cat-name">Spiritual</div>
+      </div>
+      <div class="cat-card" onclick="goToCategory('Hill Station')">
+        <div class="cat-icon">⛰️</div>
+        <div class="cat-name">Hill Stations</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED PLACES -->
+<section class="featured-section">
+  <div class="section-container">
+    <h2 class="section-heading">Featured <span>Destinations</span></h2>
+    <p class="section-sub">Hand-picked top places to visit in India</p>
+    <div class="grid" id="featuredGrid"></div>
+    <div style="text-align:center;margin-top:36px;">
+      <button class="explore-btn" onclick="window.location.href='explore.html'">View All Places →</button>
+    </div>
+  </div>
+</section>
+
+<!-- WHY INDIA SECTION -->
+<section class="why-section">
+  <div class="section-container">
+    <h2 class="section-heading">Why Visit <span>India?</span></h2>
+    <p class="section-sub">A land of diversity, culture, and wonder</p>
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-icon">🏰</div>
+        <h3>Rich Heritage</h3>
+        <p>Over 3,691 protected monuments and 40 UNESCO World Heritage Sites.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🍛</div>
+        <h3>Diverse Cuisine</h3>
+        <p>From spicy curries to sweet desserts — every state has its own unique flavours.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🎭</div>
+        <h3>Vibrant Culture</h3>
+        <p>22 official languages, hundreds of festivals and a living 5000-year-old civilization.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🌄</div>
+        <h3>Stunning Landscapes</h3>
+        <p>Himalayas, Thar Desert, tropical backwaters, and pristine beaches all in one country.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-brand">
+      <h3>📍 Incredible India</h3>
+      <p>Explore the rich cultural heritage, breathtaking landscapes, and incredible diversity of India.</p>
+      <div class="social-icons">
+        <a href="#" class="social-icon">📸</a>
+        <a href="#" class="social-icon">🐦</a>
+        <a href="#" class="social-icon">👍</a>
+        <a href="#" class="social-icon">▶️</a>
+      </div>
+    </div>
+    <div class="footer-links">
+      <h3>Quick Links</h3>
+      <p><a href="index.html">Home</a></p>
+      <p><a href="explore.html">Explore</a></p>
+      <p><a href="favourites.html">Favourites</a></p>
+      <p><a href="trip-planner.html">Trip Planner</a></p>
+    </div>
+    <div class="footer-contact">
+      <h3>Contact Info</h3>
+      <p>✉️ info@incredibleindia.org</p>
+      <p>📞 +91 1800-111-363</p>
+    </div>
+    <div class="footer-newsletter">
+      <h3>Newsletter</h3>
+      <p>Subscribe for travel tips and destination updates.</p>
+      <div class="newsletter">
+        <input type="email" id="nlEmail" placeholder="Your email">
+        <button onclick="subscribe()">Subscribe</button>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Incredible India Tourism. All rights reserved.</p>
+  </div>
+</footer>
+
+<script>
+const featured = [
+  { id:1, name:"Taj Mahal", state:"Uttar Pradesh", category:"Heritage", stars:5,
+    desc:"An ivory-white marble mausoleum and UNESCO World Heritage Site.",
+    imgs:["tajmahal.jpg"] },
+  { id:2, name:"Jaipur - Pink City", state:"Rajasthan", category:"Heritage", stars:5,
+    desc:"Known for stunning palaces, forts, and vibrant pink architecture.",
+    imgs:["jaipur pink city.jpeg"] },
+  { id:3, name:"Goa Beaches", state:"Goa", category:"Beach", stars:4,
+    desc:"Sun-kissed beaches with vibrant nightlife and Portuguese heritage.",
+    imgs:["goa beaches.jpeg"] },
+  { id:8, name:"Kerala Backwaters", state:"Kerala", category:"Nature", stars:5,
+    desc:"Serene network of lagoons, lakes and canals parallel to the coast.",
+    imgs:["kerala backwaters.jpg"] }
+];
+
+function renderFeatured() {
+  const favs = JSON.parse(localStorage.getItem("favourites")) || [];
+  document.getElementById("featuredGrid").innerHTML = featured.map(p => `
+    <div class="card">
+      <div class="card-img">
+        <span class="tag">${p.category}</span>
+        <span class="heart">${favs.some(f=>f.id===p.id)?"❤️":"♡"}</span>
+        <img src="${p.imgs[0]}" alt="${p.name}"
+          onerror="this.src='https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=600&q=80'">
+      </div>
+      <div class="card-body">
+        <div class="title-row">
+          <h3>${p.name}</h3>
+          <div class="stars">${"★".repeat(p.stars)}${"☆".repeat(5-p.stars)}</div>
+        </div>
+        <p class="state">📍 ${p.state}</p>
+        <p class="desc">${p.desc}</p>
+        <div class="buttons">
+          <button class="details-btn" onclick="window.location.href='explore.html'">View Details</button>
+        </div>
+      </div>
+    </div>`).join("");
+}
+
+function goExplore() {
+  const q = document.getElementById("homeSearch").value;
+  const state = document.getElementById("homeState").value;
+  const cat = document.getElementById("homeCat").value;
+  let url = "explore.html";
+  const params = [];
+  if (q) params.push("q="+encodeURIComponent(q));
+  if (state) params.push("state="+encodeURIComponent(state));
+  if (cat) params.push("cat="+encodeURIComponent(cat));
+  if (params.length) url += "?" + params.join("&");
+  window.location.href = url;
+}
+
+function goToCategory(cat) {
+  window.location.href = "explore.html?cat=" + encodeURIComponent(cat);
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute("data-theme") === "dark";
+  html.setAttribute("data-theme", isDark ? "light" : "dark");
+  document.querySelector(".theme-toggle").textContent = isDark ? "🌙" : "☀️";
+  localStorage.setItem("theme", isDark ? "light" : "dark");
+}
+
+function toggleMenu() { document.getElementById("navLinks").classList.toggle("open"); }
+
+function subscribe() {
+  const e = document.getElementById("nlEmail").value.trim();
+  if (!e) { alert("Please enter your email!"); return; }
+  alert("✅ Subscribed successfully!"); document.getElementById("nlEmail").value = "";
+}
+
+window.onload = () => {
+  const saved = localStorage.getItem("theme");
+  if (saved === "dark") {
+    document.documentElement.setAttribute("data-theme","dark");
+    document.querySelector(".theme-toggle").textContent = "☀️";
+  }
+  renderFeatured();
+};
+</script>
+</body>
+</html>

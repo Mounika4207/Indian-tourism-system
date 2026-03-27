@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Favourites - Incredible India</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="logo">📍 Incredible <span class="highlight">India</span></div>
+  <div class="hamburger" onclick="toggleMenu()">☰</div>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="explore.html">Explore</a></li>
+    <li><a href="favourites.html" class="active">Favourites</a></li>
+    <li><a href="trip-planner.html">Trip Planner</a></li>
+    <li><a href="contact details.html">Contact</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+  </div>
+</nav>
+
+<div class="page-section">
+  <h1 class="page-title">Your <span>Favourites</span></h1>
+  <p class="page-subtitle">Places you've saved for your next adventure.</p>
+  <div class="grid" id="favGrid"></div>
+</div>
+
+<script>
+function getFavs() { return JSON.parse(localStorage.getItem("favourites")) || []; }
+
+function renderFavs() {
+  const favs = getFavs();
+  const grid = document.getElementById("favGrid");
+  if (!favs.length) {
+    grid.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="empty-icon">♡</div>
+        <p>No favourites yet. Start exploring and save places you love!</p>
+        <button onclick="window.location.href='explore.html'" class="details-btn" style="margin-top:16px;">Explore Places</button>
+      </div>`;
+    return;
+  }
+  grid.innerHTML = favs.map((p, i) => `
+    <div class="card">
+      <div class="card-img">
+        <span class="tag">${p.category || "Place"}</span>
+        <span class="heart active">❤️</span>
+        <img src="${p.imgs ? p.imgs[0] : (p.img || '')}" alt="${p.name}"
+          onerror="this.src='https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=600&q=80'">
+      </div>
+      <div class="card-body">
+        <div class="title-row">
+          <h3>${p.name}</h3>
+          <div class="stars">${"★".repeat(p.stars||4)}${"☆".repeat(5-(p.stars||4))}</div>
+        </div>
+        <p class="state">📍 ${p.state}</p>
+        <p class="desc">${(p.desc||"").slice(0,90)}...</p>
+        <div class="buttons">
+          <button class="fav-btn remove-btn" onclick="removeFav(${i})">❌ Remove</button>
+          <button class="trip-btn" onclick="addToTrip(${i})">📅 Add to Trip</button>
+        </div>
+      </div>
+    </div>`).join("");
+}
+
+function removeFav(i) {
+  let favs = getFavs(); favs.splice(i,1);
+  localStorage.setItem("favourites", JSON.stringify(favs));
+  renderFavs();
+}
+
+function addToTrip(i) {
+  const place = getFavs()[i];
+  let trip = JSON.parse(localStorage.getItem("tripPlanner")) || [];
+  if (trip.some(t => t.id === place.id)) { alert("Already in trip planner!"); return; }
+  trip.push(place);
+  localStorage.setItem("tripPlanner", JSON.stringify(trip));
+  alert(`📅 ${place.name} added to Trip Planner!`);
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute("data-theme") === "dark";
+  html.setAttribute("data-theme", isDark ? "light" : "dark");
+  document.querySelector(".theme-toggle").textContent = isDark ? "🌙" : "☀️";
+  localStorage.setItem("theme", isDark ? "light" : "dark");
+}
+
+function toggleMenu() { document.getElementById("navLinks").classList.toggle("open"); }
+
+window.onload = () => {
+  const saved = localStorage.getItem("theme");
+  if (saved === "dark") { document.documentElement.setAttribute("data-theme","dark"); document.querySelector(".theme-toggle").textContent="☀️"; }
+  renderFavs();
+};
+</script>
+</body>
+</html>

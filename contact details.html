@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact Us - Incredible India</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="logo">📍 Incredible <span class="highlight">India</span></div>
+  <div class="hamburger" onclick="toggleMenu()">☰</div>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="explore.html">Explore</a></li>
+    <li><a href="favourites.html">Favourites</a></li>
+    <li><a href="trip-planner.html">Trip Planner</a></li>
+    <li><a href="contact details.html" class="active">Contact</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+  </div>
+</nav>
+
+<div class="page-section contact-page">
+  <h1 class="page-title">Contact <span>Us</span></h1>
+  <p class="page-subtitle">Have questions or suggestions? We'd love to hear from you.</p>
+
+  <div class="contact-form">
+    <input type="text" id="contactName" placeholder="Your Name">
+    <input type="email" id="contactEmail" placeholder="Your Email">
+    <textarea id="contactMsg" placeholder="Your Message"></textarea>
+    <button onclick="sendMessage()">✈️ Send Message</button>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-brand">
+      <h3>📍 Incredible India</h3>
+      <p>Explore the rich cultural heritage, breathtaking landscapes, and incredible diversity of India.</p>
+      <div class="social-icons">
+        <a href="#" class="social-icon">📸</a>
+        <a href="#" class="social-icon">🐦</a>
+        <a href="#" class="social-icon">👍</a>
+        <a href="#" class="social-icon">▶️</a>
+      </div>
+    </div>
+    <div class="footer-links">
+      <h3>Quick Links</h3>
+      <p><a href="index.html">Home</a></p>
+      <p><a href="explore.html">Explore</a></p>
+      <p><a href="favourites.html">Favourites</a></p>
+      <p><a href="trip-planner.html">Trip Planner</a></p>
+    </div>
+    <div class="footer-contact">
+      <h3>Contact Info</h3>
+      <p>✉️ info@incredibleindia.org</p>
+      <p>📞 +91 1800-111-363</p>
+    </div>
+    <div class="footer-newsletter">
+      <h3>Newsletter</h3>
+      <p>Subscribe for travel tips and destination updates.</p>
+      <div class="newsletter">
+        <input type="email" id="nlEmail" placeholder="Your email">
+        <button onclick="subscribe()">Subscribe</button>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Incredible India Tourism. All rights reserved.</p>
+  </div>
+</footer>
+
+<script>
+function sendMessage() {
+  const name = document.getElementById("contactName").value.trim();
+  const email = document.getElementById("contactEmail").value.trim();
+  const msg = document.getElementById("contactMsg").value.trim();
+  if (!name || !email || !msg) { alert("Please fill all fields!"); return; }
+  alert(`✅ Thank you ${name}! Your message has been sent.`);
+  document.getElementById("contactName").value = "";
+  document.getElementById("contactEmail").value = "";
+  document.getElementById("contactMsg").value = "";
+}
+
+function subscribe() {
+  const email = document.getElementById("nlEmail").value.trim();
+  if (!email) { alert("Please enter your email!"); return; }
+  alert("✅ Subscribed successfully!");
+  document.getElementById("nlEmail").value = "";
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute("data-theme") === "dark";
+  html.setAttribute("data-theme", isDark ? "light" : "dark");
+  document.querySelector(".theme-toggle").textContent = isDark ? "🌙" : "☀️";
+  localStorage.setItem("theme", isDark ? "light" : "dark");
+}
+
+function toggleMenu() { document.getElementById("navLinks").classList.toggle("open"); }
+
+window.onload = () => {
+  const saved = localStorage.getItem("theme");
+  if (saved === "dark") { document.documentElement.setAttribute("data-theme","dark"); document.querySelector(".theme-toggle").textContent="☀️"; }
+};
+</script>
+</body>
+</html>

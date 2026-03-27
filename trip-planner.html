@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trip Planner - Incredible India</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="logo">📍 Incredible <span class="highlight">India</span></div>
+  <div class="hamburger" onclick="toggleMenu()">☰</div>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="explore.html">Explore</a></li>
+    <li><a href="favourites.html">Favourites</a></li>
+    <li><a href="trip-planner.html" class="active">Trip Planner</a></li>
+    <li><a href="contact details.html">Contact</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+  </div>
+</nav>
+
+<div class="page-section">
+  <h1 class="page-title">📅 Trip <span>Planner</span></h1>
+  <p class="page-subtitle">Plan your dream India itinerary, set dates and estimate your budget.</p>
+
+  <!-- TRIP SETTINGS -->
+  <div class="trip-settings">
+    <div class="trip-setting-box">
+      <label>Trip Start Date</label>
+      <input type="date" id="tripStart" oninput="updateTripSummary()">
+    </div>
+    <div class="trip-setting-box">
+      <label>Days Per Place</label>
+      <input type="number" id="daysPerPlace" value="2" min="1" max="10" oninput="updateTripSummary()">
+    </div>
+    <div class="trip-setting-box">
+      <label>Number of People</label>
+      <input type="number" id="tripPeople" value="2" min="1" max="20" oninput="updateTripSummary()">
+    </div>
+  </div>
+
+  <!-- TRIP SUMMARY -->
+  <div class="trip-summary" id="tripSummary"></div>
+
+  <!-- TRIP LIST -->
+  <div id="tripContainer"></div>
+
+  <div class="trip-actions">
+    <button class="clear-btn" onclick="clearTrip()">🗑️ Clear All</button>
+    <button class="explore-link-btn" onclick="window.location.href='explore.html'">➕ Add More Places</button>
+    <button class="print-btn" onclick="window.print()">🖨️ Print Itinerary</button>
+  </div>
+</div>
+
+<script>
+function getTrip() { return JSON.parse(localStorage.getItem("tripPlanner")) || []; }
+
+function renderTrip() {
+  const trip = getTrip();
+  const container = document.getElementById("tripContainer");
+  if (!trip.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🗺️</div>
+        <p>No places added yet.</p>
+        <button onclick="window.location.href='explore.html'" class="details-btn" style="margin-top:16px;">Explore Places</button>
+      </div>`;
+    document.getElementById("tripSummary").innerHTML = "";
+    return;
+  }
+
+  const days = parseInt(document.getElementById("daysPerPlace").value) || 2;
+  const people = parseInt(document.getElementById("tripPeople").value) || 2;
+  const startDate = document.getElementById("tripStart").value;
+
+  container.innerHTML = trip.map((p, i) => {
+    let dateStr = "";
+    if (startDate) {
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + i * days);
+      const end = new Date(d); end.setDate(end.getDate() + days - 1);
+      dateStr = `<span class="trip-dates">📅 ${d.toDateString()} – ${end.toDateString()}</span>`;
+    }
+    const cost = (p.costPerDay + 3300) * days * people;
+    return `
+      <div class="trip-card" draggable="true" ondragstart="dragStart(${i})" ondragover="dragOver(event,${i})" ondrop="drop(${i})">
+        <div class="trip-num">${i+1}</div>
+        <img src="${p.imgs ? p.imgs[0] : p.img || ''}" onerror="this.src='https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=200&q=80'" class="trip-img">
+        <div class="trip-info">
+          <h3>${p.name}</h3>
+          <p class="trip-state">📍 ${p.state} · ${p.category}</p>
+          ${dateStr}
+          <p class="trip-cost">💰 Est. Cost: <strong>₹${cost.toLocaleString()}</strong> (${people} pax, ${days} days)</p>
+          <p class="trip-desc">${p.desc ? p.desc.slice(0,80)+"..." : ""}</p>
+        </div>
+        <button class="remove-trip-btn" onclick="removeFromTrip(${i})">✕</button>
+      </div>`;
+  }).join("");
+  updateTripSummary();
+}
+
+function updateTripSummary() {
+  const trip = getTrip();
+  if (!trip.length) return;
+  const days = parseInt(document.getElementById("daysPerPlace").value) || 2;
+  const people = parseInt(document.getElementById("tripPeople").value) || 2;
+  const totalDays = trip.length * days;
+  const totalCost = trip.reduce((sum, p) => sum + (p.costPerDay + 3300) * days * people, 0);
+  document.getElementById("tripSummary").innerHTML = `
+    <div class="summary-grid">
+      <div class="summary-box">🗺️<br><strong>${trip.length}</strong><br>Places</div>
+      <div class="summary-box">📅<br><strong>${totalDays}</strong><br>Total Days</div>
+      <div class="summary-box">👥<br><strong>${people}</strong><br>People</div>
+      <div class="summary-box">💰<br><strong>₹${totalCost.toLocaleString()}</strong><br>Est. Budget</div>
+    </div>`;
+  renderTrip();
+}
+
+function removeFromTrip(i) {
+  let trip = getTrip(); trip.splice(i,1);
+  localStorage.setItem("tripPlanner", JSON.stringify(trip));
+  renderTrip();
+}
+
+function clearTrip() {
+  if (confirm("Clear entire trip?")) { localStorage.removeItem("tripPlanner"); renderTrip(); }
+}
+
+// Drag to reorder
+let dragIdx = null;
+function dragStart(i) { dragIdx = i; }
+function dragOver(e, i) { e.preventDefault(); }
+function drop(i) {
+  if (dragIdx === null || dragIdx === i) return;
+  let trip = getTrip();
+  const moved = trip.splice(dragIdx, 1)[0];
+  trip.splice(i, 0, moved);
+  localStorage.setItem("tripPlanner", JSON.stringify(trip));
+  dragIdx = null; renderTrip();
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute("data-theme") === "dark";
+  html.setAttribute("data-theme", isDark ? "light" : "dark");
+  document.querySelector(".theme-toggle").textContent = isDark ? "🌙" : "☀️";
+  localStorage.setItem("theme", isDark ? "light" : "dark");
+}
+
+function toggleMenu() { document.getElementById("navLinks").classList.toggle("open"); }
+
+window.onload = () => {
+  const saved = localStorage.getItem("theme");
+  if (saved === "dark") { document.documentElement.setAttribute("data-theme","dark"); document.querySelector(".theme-toggle").textContent="☀️"; }
+  renderTrip();
+};
+</script>
+</body>
+</html>

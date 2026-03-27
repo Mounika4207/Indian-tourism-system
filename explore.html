@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Explore - Incredible India</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css"/>
+<style>
+/* ===== TRAVEL MODE CARDS ===== */
+.travel-modes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+.travel-mode-card {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: 12px 10px;
+  text-align: center;
+  transition: background 0.2s, transform 0.15s;
+}
+.travel-mode-card:hover {
+  background: rgba(255,122,0,0.18);
+  border-color: rgba(255,122,0,0.5);
+  transform: translateY(-2px);
+}
+.travel-mode-icon {
+  font-size: 24px;
+  display: block;
+  margin-bottom: 4px;
+}
+.travel-mode-label {
+  font-size: 11px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 4px;
+}
+.travel-mode-time {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fbbf24;
+  display: block;
+}
+.travel-mode-speed {
+  font-size: 10px;
+  color: #64748b;
+  display: block;
+  margin-top: 2px;
+}
+.route-divider {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  margin: 12px 0 4px;
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="logo">📍 Incredible <span class="highlight">India</span></div>
+  <div class="hamburger" onclick="toggleMenu()">☰</div>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="explore.html" class="active">Explore</a></li>
+    <li><a href="favourites.html">Favourites</a></li>
+    <li><a href="trip-planner.html">Trip Planner</a></li>
+    <li><a href="contact details.html">Contact</a></li>
+  </ul>
+  <div class="nav-right">
+    <input type="text" id="searchInput" placeholder="Search places..." class="search" oninput="filterPlaces()">
+    <select class="dropdown" id="stateFilter" onchange="filterPlaces()">
+      <option value="">All States</option>
+      <option>Uttar Pradesh</option><option>Rajasthan</option><option>Goa</option>
+      <option>Tamil Nadu</option><option>Karnataka</option><option>Kerala</option>
+      <option>Himachal Pradesh</option><option>West Bengal</option><option>Punjab</option>
+    </select>
+    <select class="dropdown" id="catFilter" onchange="filterPlaces()">
+      <option value="">All Categories</option>
+      <option>Heritage</option><option>Nature</option><option>Beach</option>
+      <option>Spiritual</option><option>Hill Station</option>
+    </select>
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <select class="dropdown" id="langSelect" onchange="changeLanguage()">
+      <option value="en">English</option>
+      <option value="hi">हिंदी</option>
+      <option value="te">తెలుగు</option>
+      <option value="ta">தமிழ்</option>
+    </select>
+  </div>
+</nav>
+
+<div class="heading">
+  <h1 data-lang="exploreTitle">Explore <span>India</span></h1>
+  <p data-lang="exploreSubtitle">Discover the most breathtaking destinations across the incredible subcontinent.</p>
+</div>
+
+<section class="places">
+  <div class="grid" id="placesGrid"></div>
+  <p id="noResults" style="display:none;text-align:center;color:#888;padding:40px;">No places found.</p>
+</section>
+
+<!-- DETAIL MODAL -->
+<div id="modal" class="modal" onclick="handleModalClick(event)">
+  <div class="modal-content large-modal">
+    <span class="close" onclick="closeModal()">✕</span>
+    <div class="modal-img-gallery" id="modalGallery"></div>
+    <div class="modal-details">
+      <div class="modal-top">
+        <div>
+          <h2 id="modalTitle"></h2>
+          <p id="modalState" class="modal-state-text"></p>
+          <div id="modalStars" class="modal-stars"></div>
+        </div>
+        <span id="modalTag" class="modal-tag"></span>
+      </div>
+      <p id="modalDesc" class="modal-desc-text"></p>
+      <div class="modal-info-grid">
+        <div class="info-box">🕐 <strong>Best Time:</strong><br><span id="modalBestTime"></span></div>
+        <div class="info-box">💰 <strong>Entry Fee:</strong><br><span id="modalCost"></span></div>
+        <div class="info-box">📍 <strong>Nearby:</strong><br><span id="modalNearby"></span></div>
+        <div class="info-box">🌤️ <strong>Weather:</strong><br><span id="modalWeather">Loading...</span></div>
+      </div>
+      <div class="budget-calc">
+        <h3>💰 Budget Calculator</h3>
+        <div class="calc-inputs">
+          <label>Days: <input type="number" id="calcDays" value="3" min="1" max="30" oninput="calcBudget()"></label>
+          <label>People: <input type="number" id="calcPeople" value="2" min="1" max="20" oninput="calcBudget()"></label>
+        </div>
+        <div class="calc-result" id="calcResult"></div>
+      </div>
+      <div class="reviews-section">
+        <h3>⭐ Reviews</h3>
+        <div id="reviewsList"></div>
+        <div class="add-review">
+          <input type="text" id="reviewName" placeholder="Your name">
+          <div class="star-input" id="starInput">
+            <span onclick="setRating(1)">★</span><span onclick="setRating(2)">★</span>
+            <span onclick="setRating(3)">★</span><span onclick="setRating(4)">★</span>
+            <span onclick="setRating(5)">★</span>
+          </div>
+          <textarea id="reviewText" placeholder="Write your review..."></textarea>
+          <button onclick="submitReview()">Submit Review</button>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="fav-btn" id="modalFavBtn" onclick="toggleFavFromModal()">♡ Save</button>
+        <button class="trip-btn" onclick="addToTripFromModal()">📅 Trip Planner</button>
+        <button class="map-btn" onclick="openMapForCurrent()">🗺️ View on Map</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAP MODAL -->
+<div id="mapModal" class="modal" onclick="if(event.target===this)closeMapModal()">
+  <div class="modal-content map-modal-content">
+    <span class="close" onclick="closeMapModal()">✕</span>
+    <div class="map-header">
+      <h3 id="mapTitle"></h3>
+      <p id="mapCoords" class="map-coords"></p>
+    </div>
+    <div class="map-tab-btns">
+      <button class="map-tab-btn active" id="tabLocation" onclick="switchTab('location')">📍 Location</button>
+      <button class="map-tab-btn" id="tabDirections" onclick="switchTab('directions')">🧭 Get Directions</button>
+    </div>
+    <div id="tabLocationPanel">
+      <p class="map-hint">📌 The pin marks the exact location of this destination.</p>
+    </div>
+    <div id="tabDirectionsPanel" style="display:none;">
+      <div class="directions-form">
+        <div class="dir-input-row">
+          <span>🔵</span>
+          <input type="text" id="fromInput" placeholder="Enter your city or address (e.g. Hyderabad)">
+          <button class="dir-btn" onclick="useMyLocation()">📡 My Location</button>
+        </div>
+        <div class="dir-input-row">
+          <span>🔴</span>
+          <input type="text" id="toInput" readonly style="background:var(--input-bg);color:var(--muted);">
+        </div>
+        <button class="get-route-btn" onclick="getRoute()">🧭 Get Route</button>
+      </div>
+      <div id="routeStatus" class="route-status"></div>
+    </div>
+    <div id="mapContainer"></div>
+
+    <!-- UPDATED ROUTE INFO with Travel Modes -->
+    <div id="routeInfo" class="route-info" style="display:none;">
+      <div class="route-summary">
+        <div class="route-stat">🛣️ Distance: <strong id="routeDistance"></strong></div>
+        <div class="route-stat">🚗 Drive Time: <strong id="routeDuration"></strong></div>
+      </div>
+      <hr class="route-divider">
+      <div style="font-size:12px;color:#94a3b8;margin-bottom:8px;letter-spacing:0.3px;">⏱️ Estimated travel times by mode</div>
+      <div class="travel-modes">
+        <div class="travel-mode-card">
+          <span class="travel-mode-icon">🚌</span>
+          <span class="travel-mode-label">Bus</span>
+          <span class="travel-mode-time" id="busDuration">—</span>
+          <span class="travel-mode-speed">~60 km/h avg</span>
+        </div>
+        <div class="travel-mode-card">
+          <span class="travel-mode-icon">🚗</span>
+          <span class="travel-mode-label">Car</span>
+          <span class="travel-mode-time" id="carDuration">—</span>
+          <span class="travel-mode-speed">~80 km/h avg</span>
+        </div>
+        <div class="travel-mode-card">
+          <span class="travel-mode-icon">✈️</span>
+          <span class="travel-mode-label">Flight</span>
+          <span class="travel-mode-time" id="flightDuration">—</span>
+          <span class="travel-mode-speed">~700 km/h + 2h transit</span>
+        </div>
+      </div>
+      <p class="route-note" style="margin-top:10px;">Route powered by OpenStreetMap · Flight time is estimated (includes airport transit)</p>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+<script>
+const places = [
+  { id:1, name:"Taj Mahal", state:"Uttar Pradesh", category:"Heritage", stars:5,
+    desc:"An ivory-white marble mausoleum built in 1632 by Mughal Emperor Shah Jahan. One of the Seven Wonders of the World.",
+    bestTime:"October to March", fee:"₹50 (Indians) | ₹1100 (Foreigners)", costPerDay:2500,
+    nearby:"Agra Fort, Fatehpur Sikri, Mehtab Bagh", lat:27.1751, lng:78.0421,
+    weatherCity:"Agra", imgs:["tajmahal.jpg","tajmahal.jpg","tajmahal.jpg"] },
+  { id:2, name:"Jaipur - Pink City", state:"Rajasthan", category:"Heritage", stars:5,
+    desc:"Known for stunning palaces, forts, and vibrant pink architecture. Famous for Hawa Mahal, City Palace, Amber Fort.",
+    bestTime:"October to March", fee:"₹100–₹500 per monument", costPerDay:2000,
+    nearby:"Amber Fort, Nahargarh Fort, Abhaneri", lat:26.9124, lng:75.7873,
+    weatherCity:"Jaipur", imgs:["jaipur pink city.jpeg","jaipur pink city.jpeg","jaipur pink city.jpeg"] },
+  { id:3, name:"Goa Beaches", state:"Goa", category:"Beach", stars:4,
+    desc:"Sun-kissed beaches with vibrant nightlife and Portuguese heritage. Famous for Baga and Calangute beaches.",
+    bestTime:"November to February", fee:"Free | Activities Extra", costPerDay:3000,
+    nearby:"Dudhsagar Falls, Old Goa Churches", lat:15.2993, lng:74.1240,
+    weatherCity:"Panaji", imgs:["goa beaches.jpeg","goa beaches.jpeg","goa beaches.jpeg"] },
+  { id:4, name:"Manali", state:"Himachal Pradesh", category:"Hill Station", stars:4,
+    desc:"Snow-covered mountains and adventure sports destination. Famous for Solang Valley and Rohtang Pass.",
+    bestTime:"Dec–Jan (Snow), May–Jun (Trekking)", fee:"Free | Activities ₹500+", costPerDay:3500,
+    nearby:"Rohtang Pass, Kullu, Kasol", lat:32.2396, lng:77.1887,
+    weatherCity:"Manali", imgs:["manali.avif","manali.avif","manali.avif"] },
+  { id:5, name:"Varanasi", state:"Uttar Pradesh", category:"Spiritual", stars:5,
+    desc:"One of the oldest cities in the world. The sacred Ganga Aarti at Dashashwamedh Ghat is deeply moving.",
+    bestTime:"October to March", fee:"Free | Boat Ride ₹200–₹500", costPerDay:1500,
+    nearby:"Sarnath, Ramnagar Fort, Chunar Fort", lat:25.3176, lng:82.9739,
+    weatherCity:"Varanasi", imgs:["varanasi.jpeg","varanasi.jpeg","varanasi.jpeg"] },
+  { id:6, name:"Ooty", state:"Tamil Nadu", category:"Hill Station", stars:4,
+    desc:"Queen of Hill Stations with beautiful botanical gardens, Ooty Lake and Nilgiri Mountain Railway.",
+    bestTime:"April–June, Sep–Nov", fee:"Botanical Garden ₹30 | Lake ₹20", costPerDay:2000,
+    nearby:"Coonoor, Doddabetta Peak, Pykara Falls", lat:11.4102, lng:76.6950,
+    weatherCity:"Ooty", imgs:["ooty.jpeg","ooty.jpeg","ooty.jpeg"] },
+  { id:7, name:"Mysore Palace", state:"Karnataka", category:"Heritage", stars:4,
+    desc:"Official residence of the Wadiyar dynasty. Illuminated with 100,000 lights during Dussehra.",
+    bestTime:"October to March", fee:"₹70 (Indians) | ₹200 (Foreigners)", costPerDay:1800,
+    nearby:"Chamundi Hills, Brindavan Gardens", lat:12.3052, lng:76.6552,
+    weatherCity:"Mysore", imgs:["mysore palace.jpeg","mysore palace.jpeg","mysore palace.jpeg"] },
+  { id:8, name:"Kerala Backwaters", state:"Kerala", category:"Nature", stars:5,
+    desc:"900 km of waterways. Houseboat cruises through Alleppey are among the most iconic experiences in India.",
+    bestTime:"September to March", fee:"Houseboat ₹6,000/night", costPerDay:4000,
+    nearby:"Alleppey Beach, Kumarakom, Kottayam", lat:9.4981, lng:76.3388,
+    weatherCity:"Alleppey", imgs:["kerala backwaters.jpg","kerala backwaters.jpg","kerala backwaters.jpg"] },
+  { id:9, name:"Golden Temple", state:"Punjab", category:"Spiritual", stars:5,
+    desc:"The holiest shrine in Sikhism, shimmering in gold over the sacred Amrit Sarovar pool.",
+    bestTime:"October to March", fee:"Free", costPerDay:1200,
+    nearby:"Jallianwala Bagh, Wagah Border, Durgiana Temple", lat:31.6200, lng:74.8765,
+    weatherCity:"Amritsar", imgs:["golden temple.jpg","golden temple.jpg","golden temple.jpg"] },
+  { id:10, name:"Darjeeling", state:"West Bengal", category:"Hill Station", stars:4,
+    desc:"Famous for tea gardens, the toy train and views of Kangchenjunga — world's third highest peak.",
+    bestTime:"March–May, Sep–Nov", fee:"Toy Train ₹1,430", costPerDay:2800,
+    nearby:"Tiger Hill, Batasia Loop, Mirik Lake", lat:27.0360, lng:88.2627,
+    weatherCity:"Darjeeling", imgs:["darjeeling.jpeg","darjeeling.jpg","darjeeling.jpg"] }
+];
+
+const WEATHER_API_KEY = "aa41df65a407a80e48703f340d5ef44a";
+let currentPlace = null, selectedRating = 0, activeGalleryIndex = 0;
+let leafletMap = null, routingControl = null, userMarker = null;
+let userLatLng = null, currentMapPlace = null;
+
+// ===== TRAVEL TIME HELPER =====
+function formatDuration(totalMinutes) {
+  const h = Math.floor(totalMinutes / 60);
+  const m = Math.round(totalMinutes % 60);
+  if (h === 0) return `${m} min`;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
+
+function calcTravelModes(distanceKm) {
+  // Bus: avg 60 km/h on Indian highways
+  const busMins = (distanceKm / 60) * 60;
+  // Car: avg 80 km/h
+  const carMins = (distanceKm / 80) * 60;
+  // Flight: 700 km/h airspeed + 2h airport overhead (only meaningful >200km)
+  let flightLabel;
+  if (distanceKm < 200) {
+    flightLabel = "No flights";
+  } else {
+    const flightMins = (distanceKm / 700) * 60 + 120; // +2h airport
+    flightLabel = formatDuration(flightMins);
+  }
+  return {
+    bus: formatDuration(busMins),
+    car: formatDuration(carMins),
+    flight: flightLabel
+  };
+}
+
+// RENDER
+function renderPlaces(list) {
+  const grid = document.getElementById("placesGrid");
+  const noRes = document.getElementById("noResults");
+  if (!list.length) { grid.innerHTML=""; noRes.style.display="block"; return; }
+  noRes.style.display = "none";
+  grid.innerHTML = list.map(p => `
+    <div class="card">
+      <div class="card-img">
+        <span class="tag">${p.category}</span>
+        <span class="heart" onclick="quickFav(event,${p.id})">${isFav(p.id)?"❤️":"♡"}</span>
+        <img src="${p.imgs[0]}" alt="${p.name}" loading="lazy"
+          onerror="this.src='https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=600&q=80'">
+      </div>
+      <div class="card-body">
+        <div class="title-row"><h3>${p.name}</h3><div class="stars">${"★".repeat(p.stars)}${"☆".repeat(5-p.stars)}</div></div>
+        <p class="state">📍 ${p.state}</p>
+        <p class="desc">${p.desc.slice(0,90)}...</p>
+        <div class="buttons">
+          <button class="fav-btn" onclick="quickFav(event,${p.id})">${isFav(p.id)?"❤️ Saved":"♡ Favourite"}</button>
+          <button class="map-btn" onclick="openMap(event,${p.id})">🗺️ Map</button>
+          <button class="details-btn" onclick="openModal(${p.id})">Details</button>
+        </div>
+      </div>
+    </div>`).join("");
+}
+
+function filterPlaces() {
+  const q = document.getElementById("searchInput").value.toLowerCase();
+  const state = document.getElementById("stateFilter").value;
+  const cat = document.getElementById("catFilter").value;
+  renderPlaces(places.filter(p =>
+    (!q || p.name.toLowerCase().includes(q) || p.state.toLowerCase().includes(q)) &&
+    (!state || p.state===state) && (!cat || p.category===cat)));
+}
+
+// FAVS
+function getFavs() { return JSON.parse(localStorage.getItem("favourites")) || []; }
+function isFav(id) { return getFavs().some(f => f.id===id); }
+function quickFav(e, id) {
+  e.stopPropagation();
+  let favs = getFavs();
+  const place = places.find(p=>p.id===id);
+  if (isFav(id)) { favs=favs.filter(f=>f.id!==id); showToast("💔 Removed"); }
+  else { favs.push(place); showToast(`❤️ ${place.name} saved!`); }
+  localStorage.setItem("favourites", JSON.stringify(favs));
+  filterPlaces();
+  if (currentPlace?.id===id) updateModalFavBtn();
+}
+function toggleFavFromModal() { if (currentPlace) quickFav({stopPropagation:()=>{}}, currentPlace.id); }
+function updateModalFavBtn() {
+  const btn = document.getElementById("modalFavBtn");
+  btn.textContent = isFav(currentPlace.id) ? "❤️ Saved" : "♡ Save";
+  btn.style.background = isFav(currentPlace.id) ? "#dc3545" : "#28a745";
+}
+
+// DETAIL MODAL
+function openModal(id) {
+  const p = places.find(x=>x.id===id); currentPlace = p;
+  document.getElementById("modalTitle").textContent = p.name;
+  document.getElementById("modalState").textContent = "📍 "+p.state;
+  document.getElementById("modalStars").textContent = "★".repeat(p.stars)+"☆".repeat(5-p.stars);
+  document.getElementById("modalTag").textContent = p.category;
+  document.getElementById("modalDesc").textContent = p.desc;
+  document.getElementById("modalBestTime").textContent = p.bestTime;
+  document.getElementById("modalCost").textContent = p.fee;
+  document.getElementById("modalNearby").textContent = p.nearby;
+  renderGallery(p.imgs); calcBudget(); loadWeather(p.weatherCity);
+  loadReviews(p.id); updateModalFavBtn();
+  document.getElementById("modal").style.display = "flex";
+}
+function closeModal() { document.getElementById("modal").style.display="none"; currentPlace=null; }
+function handleModalClick(e) { if (e.target.id==="modal") closeModal(); }
+function openMapForCurrent() { if (currentPlace) { closeModal(); openMap({stopPropagation:()=>{}}, currentPlace.id); } }
+
+// GALLERY
+function renderGallery(imgs) {
+  activeGalleryIndex = 0;
+  document.getElementById("modalGallery").innerHTML = `
+    <div class="gallery-main">
+      <img id="mainImg" src="${imgs[0]}"
+        onerror="this.src='https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800&q=80'">
+      ${imgs.length>1?`<button class="gallery-nav left" onclick="changeImg(-1)">‹</button>
+        <button class="gallery-nav right" onclick="changeImg(1)">›</button>`:""}
+    </div>
+    <div class="gallery-thumbs">
+      ${imgs.map((img,i)=>`<img src="${img}" class="thumb ${i===0?"active":""}" onclick="selectImg(${i})"
+        onerror="this.src='https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=200&q=80'">`).join("")}
+    </div>`;
+  window._galleryImgs = imgs;
+}
+function changeImg(dir) { const imgs=window._galleryImgs; activeGalleryIndex=(activeGalleryIndex+dir+imgs.length)%imgs.length; selectImg(activeGalleryIndex); }
+function selectImg(i) { activeGalleryIndex=i; document.getElementById("mainImg").src=window._galleryImgs[i]; document.querySelectorAll(".thumb").forEach((t,idx)=>t.classList.toggle("active",idx===i)); }
+
+// WEATHER
+async function loadWeather(city) {
+  document.getElementById("modalWeather").textContent = "Loading...";
+  try {
+    const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city},IN&appid=${WEATHER_API_KEY}&units=metric`);
+    const d = await res.json();
+    document.getElementById("modalWeather").textContent = d.main
+      ? `${d.weather[0].description}, ${Math.round(d.main.temp)}°C`
+      : "Add API key to enable";
+  } catch { document.getElementById("modalWeather").textContent = "Add API key to enable"; }
+}
+
+// ===== LEAFLET MAP =====
+function openMap(e, id) {
+  e.stopPropagation();
+  currentMapPlace = places.find(x=>x.id===id);
+  const p = currentMapPlace;
+  document.getElementById("mapTitle").textContent = "📍 " + p.name;
+  document.getElementById("mapCoords").textContent = `${p.state} · Lat ${p.lat.toFixed(4)}, Lng ${p.lng.toFixed(4)}`;
+  document.getElementById("toInput").value = p.name + ", " + p.state + ", India";
+  document.getElementById("fromInput").value = "";
+  document.getElementById("routeInfo").style.display = "none";
+  document.getElementById("routeStatus").textContent = "";
+  switchTab("location");
+  document.getElementById("mapModal").style.display = "flex";
+
+  setTimeout(() => {
+    if (leafletMap) { leafletMap.remove(); leafletMap = null; routingControl = null; }
+    leafletMap = L.map("mapContainer").setView([p.lat, p.lng], 13);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19
+    }).addTo(leafletMap);
+
+    const icon = L.divIcon({
+      html:`<div style="background:#ff7a00;width:38px;height:38px;border-radius:50% 50% 50% 0;
+            transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;
+            box-shadow:0 3px 10px rgba(0,0,0,0.35)">
+            <span style="transform:rotate(45deg);font-size:18px">📍</span></div>`,
+      className:"", iconSize:[38,38], iconAnchor:[19,38], popupAnchor:[0,-40]
+    });
+    L.marker([p.lat,p.lng],{icon}).addTo(leafletMap)
+      .bindPopup(`<b style="font-size:15px">${p.name}</b><br>
+        <span style="color:#ff7a00">${p.state}</span><br>
+        ⭐ ${"★".repeat(p.stars)} · ${p.category}<br>
+        <small>🕐 Best: ${p.bestTime}</small>`)
+      .openPopup();
+  }, 300);
+}
+
+function closeMapModal() {
+  document.getElementById("mapModal").style.display = "none";
+  if (leafletMap) { leafletMap.remove(); leafletMap=null; routingControl=null; }
+}
+
+function switchTab(tab) {
+  document.getElementById("tabLocationPanel").style.display = tab==="location"?"block":"none";
+  document.getElementById("tabDirectionsPanel").style.display = tab==="directions"?"block":"none";
+  document.getElementById("tabLocation").classList.toggle("active", tab==="location");
+  document.getElementById("tabDirections").classList.toggle("active", tab==="directions");
+  if (tab==="location" && routingControl && leafletMap) {
+    leafletMap.removeControl(routingControl); routingControl=null;
+    if (userMarker) { leafletMap.removeLayer(userMarker); userMarker=null; }
+    leafletMap.setView([currentMapPlace.lat, currentMapPlace.lng], 13);
+  }
+}
+
+async function useMyLocation() {
+  const status = document.getElementById("routeStatus");
+  status.textContent = "📡 Detecting your location...";
+  if (!navigator.geolocation) { status.textContent = "❌ Geolocation not supported by browser."; return; }
+  navigator.geolocation.getCurrentPosition(async pos => {
+    userLatLng = [pos.coords.latitude, pos.coords.longitude];
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLatLng[0]}&lon=${userLatLng[1]}&format=json`);
+      const d = await res.json();
+      document.getElementById("fromInput").value = d.address?.city || d.address?.town || d.display_name || "My Location";
+    } catch { document.getElementById("fromInput").value = "My Location"; }
+    status.textContent = "✅ Location found! Click Get Route.";
+  }, () => { status.textContent = "❌ Permission denied. Please enter location manually."; });
+}
+
+async function getRoute() {
+  const status = document.getElementById("routeStatus");
+  const fromText = document.getElementById("fromInput").value.trim();
+  if (!fromText) { status.textContent = "⚠️ Please enter a starting location."; return; }
+  status.textContent = "🔍 Searching route...";
+
+  let fromCoords = userLatLng;
+  if (!fromCoords || document.getElementById("fromInput").value !== "My Location") {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(fromText + ", India")}&format=json&limit=1`);
+      const data = await res.json();
+      if (!data.length) { status.textContent = "❌ Location not found. Try a city name like 'Hyderabad'."; return; }
+      fromCoords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+    } catch { status.textContent = "❌ Error finding location. Check internet."; return; }
+  }
+
+  if (routingControl) { leafletMap.removeControl(routingControl); routingControl=null; }
+  if (userMarker) { leafletMap.removeLayer(userMarker); userMarker=null; }
+
+  const userIcon = L.divIcon({
+    html:`<div style="background:#0066ff;width:32px;height:32px;border-radius:50%;
+          display:flex;align-items:center;justify-content:center;
+          box-shadow:0 3px 10px rgba(0,0,102,0.4);font-size:16px">🧑</div>`,
+    className:"", iconSize:[32,32], iconAnchor:[16,16]
+  });
+  userMarker = L.marker(fromCoords, {icon:userIcon}).addTo(leafletMap)
+    .bindPopup("🔵 Your Starting Point").openPopup();
+
+  routingControl = L.Routing.control({
+    waypoints: [L.latLng(...fromCoords), L.latLng(currentMapPlace.lat, currentMapPlace.lng)],
+    routeWhileDragging: false,
+    show: false,
+    lineOptions: { styles:[{color:"#ff7a00", weight:5, opacity:0.85}] },
+    createMarker: () => null
+  }).addTo(leafletMap);
+
+  routingControl.on("routesfound", e => {
+    const r = e.routes[0].summary;
+    const distKm = parseFloat((r.totalDistance / 1000).toFixed(1));
+    const hrs = Math.floor(r.totalTime / 3600);
+    const mins = Math.floor((r.totalTime % 3600) / 60);
+    const driveDuration = hrs > 0 ? `${hrs}h ${mins}m` : `${mins} min`;
+
+    // Update main distance & car/drive duration
+    document.getElementById("routeDistance").textContent = distKm + " km";
+    document.getElementById("routeDuration").textContent = driveDuration;
+
+    // Calculate and fill travel mode estimates
+    const modes = calcTravelModes(distKm);
+    document.getElementById("busDuration").textContent = modes.bus;
+    document.getElementById("carDuration").textContent = modes.car;
+    document.getElementById("flightDuration").textContent = modes.flight;
+
+    document.getElementById("routeInfo").style.display = "block";
+    status.textContent = `✅ Route found! ${distKm} km · approx ${driveDuration}`;
+  });
+
+  routingControl.on("routingerror", () => {
+    status.textContent = "❌ Route not found. Try a different city.";
+  });
+
+  leafletMap.fitBounds([fromCoords, [currentMapPlace.lat, currentMapPlace.lng]], {padding:[50,50]});
+}
+
+// BUDGET
+function calcBudget() {
+  if (!currentPlace) return;
+  const days = parseInt(document.getElementById("calcDays").value)||1;
+  const people = parseInt(document.getElementById("calcPeople").value)||1;
+  const total = (currentPlace.costPerDay+2000+800+500)*days*people;
+  document.getElementById("calcResult").innerHTML = `
+    <div class="budget-breakdown">
+      <span>🏨 Hotel: ₹${(2000*people).toLocaleString()}/night</span>
+      <span>🍽️ Food: ₹${(800*people).toLocaleString()}/day</span>
+      <span>🚌 Transport: ₹${(500*people).toLocaleString()}/day</span>
+      <span>🎟️ Activities: ₹${currentPlace.costPerDay.toLocaleString()}/day</span>
+    </div>
+    <strong>Total for ${people} person${people>1?"s":""} × ${days} day${days>1?"s":""}:
+    ₹${total.toLocaleString()}</strong>`;
+}
+
+// REVIEWS
+function getReviews(id) { return JSON.parse(localStorage.getItem("reviews_"+id))||[]; }
+function loadReviews(id) {
+  const r = getReviews(id);
+  document.getElementById("reviewsList").innerHTML = r.length
+    ? r.map(x=>`<div class="review-item"><strong>${x.name}</strong>
+        <span class="rev-stars">${"★".repeat(x.rating)}${"☆".repeat(5-x.rating)}</span>
+        <p>${x.text}</p></div>`).join("")
+    : `<p style="color:#888;font-size:14px;">No reviews yet. Be the first!</p>`;
+  selectedRating=0; updateStarInput();
+}
+function setRating(n) { selectedRating=n; updateStarInput(); }
+function updateStarInput() {
+  document.querySelectorAll("#starInput span").forEach((s,i)=>{ s.style.color=i<selectedRating?"orange":"#ccc"; });
+}
+function submitReview() {
+  if (!currentPlace) return;
+  const name = document.getElementById("reviewName").value.trim()||"Anonymous";
+  const text = document.getElementById("reviewText").value.trim();
+  if (!text||!selectedRating) { showToast("Please add a rating and review!"); return; }
+  const r = getReviews(currentPlace.id);
+  r.push({name, rating:selectedRating, text});
+  localStorage.setItem("reviews_"+currentPlace.id, JSON.stringify(r));
+  document.getElementById("reviewName").value="";
+  document.getElementById("reviewText").value="";
+  loadReviews(currentPlace.id);
+  showToast("✅ Review submitted!");
+}
+
+// TRIP PLANNER
+function addToTripFromModal() {
+  if (!currentPlace) return;
+  let trip = JSON.parse(localStorage.getItem("tripPlanner"))||[];
+  if (trip.some(t=>t.id===currentPlace.id)) { showToast("Already in trip planner!"); return; }
+  trip.push(currentPlace);
+  localStorage.setItem("tripPlanner", JSON.stringify(trip));
+  showToast("📅 Added to Trip Planner!");
+}
+
+// THEME
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute("data-theme")==="dark";
+  html.setAttribute("data-theme", isDark?"light":"dark");
+  document.querySelector(".theme-toggle").textContent = isDark?"🌙":"☀️";
+  localStorage.setItem("theme", isDark?"light":"dark");
+}
+
+// LANGUAGE
+const translations = {
+  en:{exploreTitle:"Explore <span>India</span>",exploreSubtitle:"Discover the most breathtaking destinations across the incredible subcontinent."},
+  hi:{exploreTitle:"भारत <span>खोजें</span>",exploreSubtitle:"अविश्वसनीय उपमहाद्वीप के सबसे मनोरम स्थलों की खोज करें।"},
+  te:{exploreTitle:"భారత్ <span>అన్వేషించండి</span>",exploreSubtitle:"అద్భుతమైన ఉపఖండంలోని అత్యంత అందమైన గమ్యస్థానాలను కనుగొనండి."},
+  ta:{exploreTitle:"இந்தியாவை <span>ஆராயுங்கள்</span>",exploreSubtitle:"இந்த அற்புதமான துணைக் கண்டத்தின் மிக அழகான இடங்களை கண்டுபிடியுங்கள்."}
+};
+function changeLanguage() {
+  const lang = document.getElementById("langSelect").value;
+  document.querySelectorAll("[data-lang]").forEach(el=>{
+    const k=el.getAttribute("data-lang");
+    if (translations[lang]?.[k]) el.innerHTML=translations[lang][k];
+  });
+}
+
+function showToast(msg) {
+  let t=document.getElementById("toast");
+  if (!t){t=document.createElement("div");t.id="toast";document.body.appendChild(t);}
+  t.textContent=msg; t.className="toast show";
+  setTimeout(()=>t.className="toast",2500);
+}
+function toggleMenu() { document.getElementById("navLinks").classList.toggle("open"); }
+
+window.onload = () => {
+  const saved = localStorage.getItem("theme");
+  if (saved==="dark"){document.documentElement.setAttribute("data-theme","dark");document.querySelector(".theme-toggle").textContent="☀️";}
+  renderPlaces(places);
+};
+</script>
+</body>
+</html>
